@@ -1,8 +1,3 @@
----
-name: vps-remote-workstation
-description: 将低配 Linux VPS（如 2C4G Ubuntu 24.04）改造为海外远程桌面工作站的完整指南與 Agent Skill —— 涵盖 XFCE4+xrdp 轻量级桌面、Mihomo TUN 全局接管与 SSH/RDP 防失联策略路由、机场前置与静态住宅 ISP 链式代理（dialer-proxy）、按域名/进程精准分流，以及在无物理显卡云服务器上通过原生 Firefox ESR 绕过 Cloudflare Turnstile / Claude 等严苛登录风控的实战方案。
----
-
 # 低配 VPS 海外远程桌面工作站搭建与防风控指南
 
 本指南总结自 2C4G Ubuntu 24.04 无显卡云服务器的实战经验：通过 **XFCE4 + xrdp** 提供极低内存占用的远程桌面，使用 **Mihomo (Clash.Meta) TUN 模式**接管全局流量，配合 **Linux 策略路由锁**防止 SSH/RDP 断连失联，并通过**链式静态 ISP 代理 + 原生 Firefox ESR 独立 Profile**，解决无 GPU 虚拟机在登录 Claude 等严苛 SaaS 平台时频繁遭遇 `Couldn't complete sign-in. You can try signing in from a different browser.` 的风控拦截问题。
@@ -65,7 +60,7 @@ fi
 ```bash
 cat << 'EOF' | sudo tee /usr/local/bin/protect-ssh.sh
 #!/bin/bash
-SSH_PORT=$(ss -tlnp | grep sshd | awk '{print $4}' \vert{} awk -F: '{print$NF}' | head -n 1)
+SSH_PORT=$(ss -tlnp | grep sshd | awk '{print $4}' | awk -F: '{print$NF}' | head -n 1)
 SSH_PORT=${SSH_PORT:-22}
 
 # 优先级 100/101 高于 Mihomo TUN 的路由表（约 9000），强制管理端口回包走 main 表直连
@@ -164,13 +159,13 @@ dns:
   enhanced-mode: redir-host
   default-nameserver: [1.1.1.1, 8.8.8.8]
   nameserver:
-    - [https://1.1.1.1/dns-query#GLOBAL-US](https://1.1.1.1/dns-query#GLOBAL-US)
-    - [https://8.8.8.8/dns-query#GLOBAL-US](https://8.8.8.8/dns-query#GLOBAL-US)
+    - https://1.1.1.1/dns-query#GLOBAL-US
+    - https://8.8.8.8/dns-query#GLOBAL-US
 
 proxy-providers:
   us-airport:
     type: http
-    url: "[https://your-subscription-url.example.com/sub](https://your-subscription-url.example.com/sub)"
+    url: "https://your-subscription-url.example.com/sub"
     interval: 86400
     path: ./sub.yaml
     # 正则过滤：仅保留订阅中的美国节点
@@ -178,7 +173,7 @@ proxy-providers:
     exclude-filter: "(?i)(HK|香港|TW|台湾|JP|日本|SG|新加坡|KR|韩国|[v6])"
     health-check:
       enable: true
-      url: [https://www.gstatic.com/generate_204](https://www.gstatic.com/generate_204)
+      url: https://www.gstatic.com/generate_204
       interval: 300
 
 proxies:
@@ -325,7 +320,7 @@ cat << 'EOF' | sudo -u dev tee /home/dev/Desktop/Firefox-Workstation.sh
 rm -f /home/dev/.mozilla/firefox/work-clean/lock \
       /home/dev/.mozilla/firefox/work-clean/.parentlock \
       /home/dev/.mozilla/firefox/work-clean/.startup-incomplete
-exec firefox-esr --no-remote --profile /home/dev/.mozilla/firefox/work-clean "[https://claude.ai/login](https://claude.ai/login)"
+exec firefox-esr --no-remote --profile /home/dev/.mozilla/firefox/work-clean "https://claude.ai/login"
 EOF
 sudo chmod +x /home/dev/Desktop/Firefox-Workstation.sh
 ```
@@ -357,9 +352,9 @@ ip route get <你的本地客户端IP> sport 22  # 必须显示走主网卡 eth0
 mihomo -t -d /etc/mihomo
 
 # 3. 对比默认出口与专属 ISP 出口的真实 IP / ASN 属性
-curl -s [https://ipinfo.io/json](https://ipinfo.io/json)                               # 查看默认机场出口
-curl -x socks5h://127.0.0.1:7891 -s [https://ipinfo.io/json](https://ipinfo.io/json)   # 查看 7891 端口静态 ISP 真实落地出口与 ASN
-curl -s [https://claude.ai/cdn-cgi/trace](https://claude.ai/cdn-cgi/trace) | grep -E '^(ip|colo|loc)='
+curl -s https://ipinfo.io/json                               # 查看默认机场出口
+curl -x socks5h://127.0.0.1:7891 -s https://ipinfo.io/json   # 查看 7891 端口静态 ISP 真实落地出口与 ASN
+curl -s https://claude.ai/cdn-cgi/trace | grep -E '^(ip|colo|loc)='
 
 # 4. 实时查看 Mihomo 内部真实流量链路（排查分流是否生效的终极手段）
 curl -s 127.0.0.1:9090/connections | python3 -c '

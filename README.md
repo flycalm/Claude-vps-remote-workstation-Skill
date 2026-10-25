@@ -4,7 +4,9 @@
 
 ## 阅读指南
 
-**[完整经验与配置示例：vps-remote-workstation.md](./vps-remote-workstation.md)**
+**[完整经验与配置示例：vps-remote-workstation.md](./skills/vps-remote-workstation/references/vps-remote-workstation.md)**
+
+Skill 入口：[SKILL.md](./skills/vps-remote-workstation/SKILL.md)。使用时，将整个 `skills/vps-remote-workstation/` 文件夹放入所用 Agent 的 skills 目录，保留其中的 `references/`。
 
 内容包括：
 
