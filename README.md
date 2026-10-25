@@ -16,3 +16,7 @@ Skill 入口：[SKILL.md](./skills/vps-remote-workstation/SKILL.md)。使用时�
 - XFCE4 + xrdp 轻量远程桌面
 - Firefox ESR 独立配置与登录排障经验
 - 验收命令、常见故障与回滚步骤
+
+## 有偿指导
+
+如需有偿指导，可添加 QQ：**2879415606**。
